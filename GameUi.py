@@ -70,11 +70,15 @@ class GameUi:
         rect = self.addListIndexRect(rect, index)
 
         results = GameUi.ocr.read_screen(bounding_box=rect.toTuple())
-        return ''.join([
-            word.text
+        words = [
+            word
             for line in results.result.lines
             for word in line.words
-        ])
+        ]
+
+        words.sort(key=lambda x: x.left)
+
+        return ''.join([x.text for x in words])
     
     def readRectNumber(self, target, index=0):
         text = self.readRectText(target, index)
