@@ -33,6 +33,20 @@ def saveResults(rankings, type):
     cursor.close()
     conn.close()
 
+def askForMissing(rankings):
+    for ranking in rankings:
+        if not ranking.power:
+            while True:
+                try:
+                    power = pyautogui.prompt(text=f'Enter power for {ranking.name} (ID: {ranking.id}, Rank: {ranking.rank})', title='Missing Power')
+                    if power is None:
+                        raise Exception('User cancelled input')
+                    ranking.power = power
+                    break
+                except Exception as e:
+                    print(f'Error: {e}')
+                    sleep(1)
+
 def scrapePersonalPower():
     pyautogui.PAUSE = 0
     rankings = []
@@ -94,10 +108,9 @@ def scrapePersonalPower():
                 print(f'Error: Duplicate name {ranking.name} found, restarting')
                 raise Exception('Duplicate Name')
             
-            if not power or (rankings and rankings[-1].power is not None and int(power) > int(rankings[-1].power)):
-                print(f'Error: power {power} is greater than last ranking {rankings[-1].power}, value should be filled in later')
+            if True or not power or (rankings and rankings[-1].power is not None and int(power) > int(rankings[-1].power)):
+                print(f'Error: power {power} is greater than last ranking {rankings[-1].power if rankings else 0}, value should be filled in later')
                 ranking.power = None
-                # raise Exception('Ranking out of order')
 
             rankings.append(ranking)
 
@@ -113,6 +126,7 @@ def scrapePersonalPower():
     
         actions.pageDown()
     
+    askForMissing(rankings)
     print(rankings)
     saveResults(rankings, 'Personal Power')
 
