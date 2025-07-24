@@ -1,0 +1,4 @@
+screen_ocr[easyocr]
+pywin32
+pyautogui
+pyodbc
