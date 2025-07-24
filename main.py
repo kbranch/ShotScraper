@@ -96,7 +96,7 @@ def scrapePersonalPower():
             
             if not power or (rankings and rankings[-1].power is not None and int(power) > int(rankings[-1].power)):
                 print(f'Error: power {power} is greater than last ranking {rankings[-1].power}, value should be filled in later')
-                rankings[-1].power = None
+                ranking.power = None
                 # raise Exception('Ranking out of order')
 
             rankings.append(ranking)
