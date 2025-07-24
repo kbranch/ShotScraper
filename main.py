@@ -108,7 +108,7 @@ def scrapePersonalPower():
                 print(f'Error: Duplicate name {ranking.name} found, restarting')
                 raise Exception('Duplicate Name')
             
-            if True or not power or (rankings and rankings[-1].power is not None and int(power) > int(rankings[-1].power)):
+            if not power or (rankings and rankings[-1].power is not None and int(power) > int(rankings[-1].power)):
                 print(f'Error: power {power} is greater than last ranking {rankings[-1].power if rankings else 0}, value should be filled in later')
                 ranking.power = None
 
