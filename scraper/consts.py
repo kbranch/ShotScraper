@@ -1,6 +1,6 @@
 from config import *
 
-connenctionString = f"""
+connectionString = f"""
     DRIVER={{SQL Server}};
     SERVER={serverName};
     DATABASE={database};

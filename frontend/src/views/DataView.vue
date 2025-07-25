@@ -1,0 +1,311 @@
+<script setup>
+import embed from 'vega-embed'
+import { computed, watch, ref, onMounted } from 'vue'
+
+const graphDiv = ref(null);
+const rawData = ref([]);
+const loading = ref(false);
+const errorMessage = ref(null);
+const kingdom = ref('681');
+
+async function fetchData() {
+    // rawData.value = [];
+
+    loading.value = true;
+
+    let url = `${import.meta.env.VITE_API_URL}/rankings?kingdom=${kingdom.value}`;
+    let response = await fetch(url);
+    if (response.ok) {
+      let json = await response.json();
+      json.rankings = json.rankings.map(x => {
+        return {
+          ...x,
+          // Date: new Date(x.Date * 1000),
+        };
+      });
+    
+      rawData.value = json.rankings;
+    }
+    else {
+        errorMessage.value = await response.text();
+    }
+
+    loading.value = false;
+
+    // updateGraph(spec.value);
+}
+
+function updateGraph(spec) {
+  if (!graphDiv.value) return;
+
+  let opts = {
+    width: graphDiv.value.clientWidth,
+    height: graphDiv.value.clientHeight,
+  }
+
+  embed('#graph', spec, opts);
+}
+
+const data = computed(() => {
+  return rawData.value.map(x => {
+    return {
+      // date: new Date(x.Date),
+      date: x.date,
+      price: x.Power,
+      symbol: x.PlayerId,
+      // PlayerId: x.PlayerId,
+      // Rank: x.Rank,
+      // Alliance: x.Alliance,
+    }
+  });
+});
+
+const spec = computed(() => {
+  return {
+    $schema: "https://vega.github.io/schema/vega-lite/v6.json",
+    description: "Multi-series line chart with labels and interactive highlight on hover.  We also set the selection's initial value to provide a better screenshot",
+  //   "data": {
+  //   "url": "data/stocks.csv",
+  //   "format": {"parse": {"date": "date"}}
+  // },
+    data: {
+      values: rawData.value ? rawData.value : [],
+      // "format": {"parse": {"date": "date"}}
+    },
+    width: "container",
+    height: "container",
+  //   "layer": [
+  //   {
+  //     "params": [{
+  //       "name": "index",
+  //       "value": [{"x": {"year": 2005, "month": 1, "date": 1}}],
+  //       "select": {
+  //         "type": "point",
+  //         "encodings": ["x"],
+  //         "on": "pointerover",
+  //         "nearest": true
+  //       }
+  //     }],
+  //     "mark": "point",
+  //     "encoding": {
+  //       "x": {"field": "date", "type": "temporal", "axis": null},
+  //       "opacity": {"value": 0}
+  //     }
+  //   },
+  //   {
+  //     "transform": [
+  //       {
+  //         "lookup": "symbol",
+  //         "from": {"param": "index", "key": "symbol"}
+  //       },
+  //       {
+  //         "calculate": "datum.index && datum.index.price > 0 ? (datum.price - datum.index.price)/datum.index.price : 0",
+  //         "as": "indexed_price"
+  //       }
+  //     ],
+  //     "mark": "line",
+  //     "encoding": {
+  //       "x": {"field": "date", "type": "temporal", "axis": null},
+  //       "y": {
+  //         "field": "indexed_price", "type": "quantitative",
+  //         "axis": {"format": "%"}
+  //       },
+  //       "color": {"field": "symbol", "type": "nominal"}
+  //     }
+  //   },
+  //   {
+  //     "transform": [{"filter": {"param": "index"}}],
+  //     "encoding": {
+  //       "x": {"field": "date", "type": "temporal", "axis": null},
+  //       "color": {"value": "firebrick"}
+  //     },
+  //     "layer": [
+  //       {"mark": {"type": "rule", "strokeWidth": 0.5}},
+  //       {
+  //         "mark": {"type": "text", "align": "center", "fontWeight": 100},
+  //         "encoding": {
+  //           "text": {"field": "date", "timeUnit": "yearmonth"},
+  //           "y": {"value": 310}
+  //         }
+  //       }
+  //     ]
+  //   }
+  // ]
+
+  //   layer: [
+  //   {
+  //     params: [{
+  //       name: "index",
+  //       // value: [{x: {year: 2005, month: 1, date: 1}}],
+  //       select: {
+  //         type: "point",
+  //         encodings: ["x"],
+  //         on: "pointerover",
+  //         nearest: true
+  //       }
+  //     }],
+  //     mark: "point",
+  //     encoding: {
+  //       x: {field: "Date", type: "temporal", axis: null},
+  //       opacity: {value: 0}
+  //     }
+  //   },
+  //   {
+  //     transform: [
+  //       {
+  //         lookup: "Name",
+  //         from: {param: "index", key: "Name"}
+  //       },
+  //       {
+  //         calculate: "datum.index && datum.index.Power > 0 ? (datum.Power - datum.index.Power) / datum.index.Power : 0",
+  //         as: "indexed_power"
+  //       }
+  //     ],
+  //     mark: "line",
+  //     encoding: {
+  //       x: {field: "Date", type: "temporal", axis: null},
+  //       y: {
+  //         field: "indexed_power", type: "quantitative",
+  //         axis: {format: "%"}
+  //       },
+  //       color: {field: "Name", type: "nominal"}
+  //     }
+  //   },
+  //   {
+  //     transform: [{filter: {param: "index"}}],
+  //     encoding: {
+  //       x: {field: "Date", type: "temporal", axis: null},
+  //       color: {value: "firebrick"}
+  //     },
+  //     layer: [
+  //       {mark: {type: "rule", strokeWidth: 0.5}},
+  //       {
+  //         mark: {type: "text", align: "center", fontWeight: 100},
+  //         encoding: {
+  //           text: {field: "Date", timeUnit: "day"},
+  //           y: {value: 310}
+  //         }
+  //       }
+  //     ]
+  //   }
+  // ]
+    transform: [],
+    encoding: {
+      x: {
+        field: "Date",
+        type: "temporal",
+        title: "Date",
+      },
+      y: {
+        field: "Power",
+        type: "quantitative",
+        title: "Power",
+        scale: {
+          zero: false,
+          nice: false,
+          // type: "log",
+        },
+      },
+      color: {
+        condition: {
+          param: "hover",
+          field: "PlayerId",
+          type: "nominal",
+          legend: null,
+        },
+        value: "transparent",
+      },
+      opacity: {
+        condition: {
+          param: "hover",
+          value: 1,
+        },
+        value: 0.2,
+      }
+    },
+    layer: [
+      {
+        description: "transparent layer to make it easier to trigger selection",
+        params: [
+          {
+            name: "hover",
+            select: {
+              type: "point",
+              fields: ["PlayerId"],
+              on: "pointerover",
+            }
+          }
+        ],
+        mark: {
+          type: "line",
+          strokeWidth: 8,
+          stroke: "transparent",
+        }
+      },
+      {
+        mark: "line",
+      },
+      {
+        encoding: {
+          x: {
+            aggregate: "max",
+            field: "Date",
+          },
+          y: {
+            aggregate: { argmax: "Date" },
+            field: "Power",
+          }
+        },
+        layer: [
+          {
+            mark: {
+              type: "text",
+              align: "left",
+              dx: 4,
+            },
+            encoding: {
+              text: {
+                field: "Name",
+                type: "nominal",
+              },
+            },
+          },
+        ],
+      }
+    ],
+    config: {
+      view: {
+        stroke: null,
+      },
+    },
+  }
+});
+
+onMounted(() => {
+  embed('#graph', spec.value)
+});
+
+watch(spec, updateGraph);
+
+fetchData();
+
+</script>
+
+<template>
+  <div v-if="loading" class="d-flex align-items-center justify-content-center">
+    Loading
+    <div class="spinner-border text-primary ms-2" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+  <div v-show="data" ref="graphDiv" id="graph"></div>
+</template>
+
+<style scoped>
+
+#graph {
+  width: 100%;
+  height: 1800px;
+}
+
+</style>

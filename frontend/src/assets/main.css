@@ -1,0 +1,18 @@
+@import './base.css';
+
+:root, .accordion {
+  --bs-accordion-active-color: var(--color-heading);
+  --bs-accordion-active-bg: var(--color-background-mute);
+  --bs-accordion-btn-bg: var(--color-background-soft);
+  --bs-accordion-btn-color: var(--color-text);
+  --bs-accordion-color: var(--color-text);
+  --bs-body-bg: var(--color-background-soft);
+  --bs-body-color: var(--color-text);
+  --bs-border-color: var(--color-border);
+  --bs-accordion-btn-active-icon: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23212529' stroke-linecap='round' stroke-linejoin='round'%3e%3cpath d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+  --bs-accordion-btn-icon: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23212529' stroke-linecap='round' stroke-linejoin='round'%3e%3cpath d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+}
+
+.accordion-button::after {
+  filter: invert(1);
+}

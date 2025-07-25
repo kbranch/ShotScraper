@@ -19,15 +19,19 @@ def getWindowRect():
     return GetWindowRect(handle)
 
 def saveResults(rankings, type):
-    sampleId = str(time.time())
+    sampleName = str(time.time())
     kingdoms = [int(x.kingdom) for x in rankings if x.kingdom is not None]
     kingdom = max(set(kingdoms), key=kingdoms.count)
 
-    conn = pyodbc.connect(connenctionString)
+    conn = pyodbc.connect(connectionString)
     cursor = conn.cursor()
 
+    cursor.execute(queries.insertSample, sampleName, kingdom, type)
+    cursor.execute(queries.getId)
+    sampleId = cursor.fetchone()[0]
+
     for ranking in rankings:
-        cursor.execute(queries.insertRanking, type, sampleId, ranking.id, ranking.name, ranking.power, ranking.rank, ranking.alliance, ranking.date, kingdom)
+        cursor.execute(queries.insertRanking, sampleId, ranking.id, ranking.name, ranking.power, ranking.rank, ranking.alliance, ranking.date)
 
     conn.commit()
     cursor.close()
