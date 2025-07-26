@@ -13,19 +13,26 @@ def afterRequest(response):
     return response
 
 @app.route("/")
-# @cross_origin()
 def root():
     return {'status': 'OK'}
 
 @app.route("/api/rankings", methods=['GET'])
-# @cross_origin()
 def getRankings():
     kingdom = request.args.get('kingdom')
     type = 'Personal Power'
 
-    rankings = sql.getRankings(kingdom, type)
+    data = sql.getRankings(kingdom, type)
 
-    return {'rankings': rankings}
+    return data
+
+@app.route("/api/growth", methods=['GET'])
+def getGrowth():
+    kingdom = request.args.get('kingdom')
+    type = 'Personal Power'
+
+    data = sql.getGrowth(kingdom, type)
+
+    return data
 
 if __name__ == "__main__":
     app.run()

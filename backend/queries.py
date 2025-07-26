@@ -1,19 +1,114 @@
 getRankings = """
+declare @kingdom nvarchar(20) = ?
+declare @type varchar(20) = ?
+
 select Rankings.PlayerId
       ,Rankings.Name
 	  ,Rankings.Power
 	  ,Rankings.Rank
 	  ,Rankings.Alliance
-	  --,datediff(second,{d '1970-01-01'}, max(Rankings.Date)) as Date
-	  ,max(Rankings.Date) as Date
+	  ,cast(datediff(second,{d '1970-01-01'}, Samples.Date) as bigint) * 1000 as Date
 from Rankings
-where Rankings.Kingdom = ?
-      and Rankings.Type = ?
-	  --and Rankings.PlayerId in ('101554177', '104650801', '101636054', '101046699', '103044922')
-group by Rankings.Type
-        ,Rankings.PlayerId
+join Samples
+  on Samples.SampleId = Rankings.SampleId
+where Samples.Kingdom = @kingdom
+      and Samples.Type = @type
+group by Rankings.PlayerId
 		,Rankings.Name
 		,Rankings.Power
 		,Rankings.Rank
 		,Rankings.Alliance
+		,Samples.Date
+"""
+
+getAllianceRankings = """
+select Rankings.Alliance
+      ,sum(Rankings.Power) as Power
+	  ,datediff(second,{d '1970-01-01'}, Samples.Date) as Date
+from Rankings
+join Samples
+  on Samples.SampleId = Rankings.SampleId
+where Samples.Kingdom = @kingdom
+      and Samples.Type = @type
+group by Rankings.Alliance
+		,Samples.Date
+"""
+
+getRankingGrowth = """
+declare @kingdom nvarchar(20) = ?
+declare @type varchar(20) = ?
+
+select LastRankings.PlayerId
+      ,LastRankings.Name
+	  ,LastRankings.Power
+	  ,FirstRankings.Power as StartPower
+	  ,LastRankings.Power - FirstRankings.Power as Growth
+	  ,(LastRankings.Power - FirstRankings.Power) / cast(FirstRankings.Power as float) as GrowthPercent
+	  ,LastRankings.Rank
+	  ,LastRankings.Alliance
+	  ,datediff(s, '1970-01-01 00:00:00', Samples.Date) as Date
+from Rankings as LastRankings
+outer apply (
+	select top 1 First = FIRST_VALUE(SampleId) OVER (PARTITION BY Kingdom ORDER BY Date)
+                ,Last = FIRST_VALUE(SampleId) OVER (PARTITION BY Kingdom ORDER BY Date DESC)
+	from Samples
+	where Samples.Kingdom = @kingdom
+	      and Samples.Type = @type
+) as targetSamples
+outer apply (
+	select *
+	from Rankings
+	where Rankings.SampleId = targetSamples.First
+	      and Rankings.PlayerId = LastRankings.PlayerId
+) as FirstRankings
+join Samples
+  on Samples.SampleId = targetSamples.Last
+where LastRankings.SampleId = targetSamples.Last
+"""
+
+getAllianceRankingGrowth = """
+declare @kingdom nvarchar(20) = ?
+declare @type varchar(20) = ?
+
+;with Alliances as (
+	select Rankings.Alliance
+	from Rankings
+	outer apply (
+		select top 1 First = FIRST_VALUE(SampleId) OVER (PARTITION BY Kingdom ORDER BY Date)
+					,Last = FIRST_VALUE(SampleId) OVER (PARTITION BY Kingdom ORDER BY Date DESC)
+		from Samples
+		where Samples.Kingdom = @kingdom
+			  and Samples.Type = @type
+	) as targetSamples
+	where Rankings.SampleId = targetSamples.Last
+	group by Rankings.Alliance
+)
+
+select Alliances.Alliance
+      ,FirstRankings.Power as FirstPower
+	  ,LastRankings.Power as LastPower
+	  ,LastRankings.Power - FirstRankings.Power as Growth
+	  ,(LastRankings.Power - FirstRankings.Power) / cast(FirstRankings.Power as float) as GrowthPercent
+from Alliances
+outer apply (
+	select top 1 First = FIRST_VALUE(SampleId) OVER (PARTITION BY Kingdom ORDER BY Date)
+                ,Last = FIRST_VALUE(SampleId) OVER (PARTITION BY Kingdom ORDER BY Date DESC)
+	from Samples
+	where Samples.Kingdom = @kingdom
+	      and Samples.Type = @type
+) as targetSamples
+outer apply (
+	select sum(Rankings.Power) as Power
+	from Rankings
+	where Rankings.SampleId = targetSamples.First
+	      and Rankings.Alliance = Alliances.Alliance
+	group by Rankings.Alliance
+) as FirstRankings
+outer apply (
+	select sum(Rankings.Power) as Power
+	from Rankings
+	where Rankings.SampleId = targetSamples.Last
+	      and Rankings.Alliance = Alliances.Alliance
+	group by Rankings.Alliance
+) as LastRankings
 """

@@ -1,4 +1,5 @@
 <script setup>
+import DataTable from '@/components/DataTable.vue';
 import embed from 'vega-embed'
 import { computed, watch, ref, onMounted } from 'vue'
 
@@ -6,29 +7,41 @@ const graphDiv = ref(null);
 const rawData = ref([]);
 const loading = ref(false);
 const errorMessage = ref(null);
-const kingdom = ref('681');
+const kingdom = ref('79');
+const growthData = ref([]);
 
-async function fetchData() {
-    // rawData.value = [];
+const prettyGrowth = computed(() => {
+  return growthData.value.map(x => {
+    return {
+      Alliance: x.Alliance,
+      Player: `${x.Name} (${x.PlayerId})`,
+      Growth: x.Growth,
+      'Growth %': `${Math.round(x.GrowthPercent * 1000) / 10}%`,
+    }
 
-    loading.value = true;
+  })
+});
 
-    let url = `${import.meta.env.VITE_API_URL}/rankings?kingdom=${kingdom.value}`;
-    let response = await fetch(url);
+async function fetchApiUrl(url, parameters) {
+    let response = await fetch(`${import.meta.env.VITE_API_URL}${url}?${new URLSearchParams(parameters).toString()}`);
     if (response.ok) {
-      let json = await response.json();
-      json.rankings = json.rankings.map(x => {
-        return {
-          ...x,
-          // Date: new Date(x.Date * 1000),
-        };
-      });
-    
-      rawData.value = json.rankings;
+      return await response.json();
     }
     else {
         errorMessage.value = await response.text();
+        return [];
     }
+}
+
+async function fetchData() {
+    loading.value = true;
+
+    let params = { kingdom: kingdom.value };
+    let rankings = await fetchApiUrl('/rankings', params);
+
+    rawData.value = rankings;
+
+    growthData.value = await fetchApiUrl('/growth', params);
 
     loading.value = false;
 
@@ -292,13 +305,30 @@ fetchData();
 </script>
 
 <template>
-  <div v-if="loading" class="d-flex align-items-center justify-content-center">
-    Loading
-    <div class="spinner-border text-primary ms-2" role="status">
-      <span class="visually-hidden">Loading...</span>
+
+<div class="row">
+  <div class="col">
+    <div v-if="loading" class="d-flex align-items-center justify-content-center">
+      Loading
+      <div class="spinner-border text-primary ms-2" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
     </div>
   </div>
-  <div v-show="data" ref="graphDiv" id="graph"></div>
+</div>
+
+<div class="row">
+  <div class="col-auto">
+    <DataTable :data="prettyGrowth" default-sort="Growth %" numeric-columns="Growth %" />
+  </div>
+</div>
+
+<div class="row">
+  <div class="col">
+    <div v-show="data" ref="graphDiv" id="graph"></div>
+  </div>
+</div>
+
 </template>
 
 <style scoped>

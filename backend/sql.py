@@ -13,17 +13,29 @@ connectionString = f"""
     TrustServerCertificate=yes;
 """
 
-def getRankings(kingdom, type):
+def executeQuery(query, parameters):
     conn = pyodbc.connect(connectionString)
     cursor = conn.cursor()
 
-    cursor.execute(queries.getRankings, (kingdom, type))
+    cursor.execute(query, parameters)
 
-    rankings = cursor.fetchall()
+    result = cursor.fetchall()
 
     columns = [column[0] for column in cursor.description]
 
     cursor.close()
     conn.close()
 
-    return [{columns[i]: row[i] for i in range(len(columns))} for row in rankings]
+    return [{columns[i]: row[i] for i in range(len(columns))} for row in result]
+
+def getRankings(kingdom, type):
+    return executeQuery(queries.getRankings, (kingdom, type))
+
+def getAllianceRankings(kingdom, type):
+    return executeQuery(queries.getAllianceRankings, (kingdom, type))
+
+def getGrowth(kingdom, type):
+    return executeQuery(queries.getRankingGrowth, (kingdom, type))
+
+def getAllianceGrowth(kingdom, type):
+    return executeQuery(queries.getAllianceRankingGrowth, (kingdom, type))
