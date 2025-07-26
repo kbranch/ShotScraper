@@ -6,5 +6,13 @@ import { RouterView } from 'vue-router'
   <RouterView />
 </template>
 
+<style>
+
+.invert {
+  filter: invert(1);
+}
+
+</style>
+
 <style scoped>
 </style>

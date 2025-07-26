@@ -34,5 +34,14 @@ def getGrowth():
 
     return data
 
+@app.route("/api/allianceGrowth", methods=['GET'])
+def getAllianceGrowth():
+    kingdom = request.args.get('kingdom')
+    type = 'Personal Power'
+
+    data = sql.getAllianceGrowth(kingdom, type)
+
+    return data
+
 if __name__ == "__main__":
     app.run()

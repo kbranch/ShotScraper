@@ -22,6 +22,9 @@ group by Rankings.PlayerId
 """
 
 getAllianceRankings = """
+declare @kingdom nvarchar(20) = ?
+declare @type varchar(20) = ?
+
 select Rankings.Alliance
       ,sum(Rankings.Power) as Power
 	  ,datediff(second,{d '1970-01-01'}, Samples.Date) as Date
@@ -89,6 +92,7 @@ select Alliances.Alliance
 	  ,LastRankings.Power as LastPower
 	  ,LastRankings.Power - FirstRankings.Power as Growth
 	  ,(LastRankings.Power - FirstRankings.Power) / cast(FirstRankings.Power as float) as GrowthPercent
+	  ,LastRankings.PlayerCount
 from Alliances
 outer apply (
 	select top 1 First = FIRST_VALUE(SampleId) OVER (PARTITION BY Kingdom ORDER BY Date)
@@ -106,9 +110,11 @@ outer apply (
 ) as FirstRankings
 outer apply (
 	select sum(Rankings.Power) as Power
+		,count(*) as PlayerCount
 	from Rankings
 	where Rankings.SampleId = targetSamples.Last
 	      and Rankings.Alliance = Alliances.Alliance
 	group by Rankings.Alliance
 ) as LastRankings
+
 """
