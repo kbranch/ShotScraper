@@ -1,9 +1,8 @@
 <script setup>
 import DataTable from '@/components/DataTable.vue';
-import embed from 'vega-embed'
-import { computed, watch, ref, onMounted } from 'vue'
+import VegaChart from '@/components/VegaChart.vue';
+import { computed, ref } from 'vue'
 
-const graphDiv = ref(null);
 const rawData = ref([]);
 const loading = ref(false);
 const errorMessage = ref(null);
@@ -60,27 +59,16 @@ async function fetchData() {
     // updateGraph(spec.value);
 }
 
-function updateGraph(spec) {
-  if (!graphDiv.value) return;
-
-  let opts = {
-    width: graphDiv.value.clientWidth,
-    height: graphDiv.value.clientHeight,
-  }
-
-  embed('#graph', spec, opts);
-}
-
-const data = computed(() => {
+const growthChartData = computed(() => {
   return rawData.value.map(x => {
     return {
       // date: new Date(x.Date),
-      date: x.date,
-      price: x.Power,
-      symbol: x.PlayerId,
-      // PlayerId: x.PlayerId,
-      // Rank: x.Rank,
-      // Alliance: x.Alliance,
+      Date: new Date(x.Date),
+      Power: x.Power,
+      PlayerId: x.PlayerId,
+      Name: x.Name,
+      Rank: x.Rank,
+      Alliance: x.Alliance,
     }
   });
 });
@@ -89,146 +77,30 @@ const spec = computed(() => {
   return {
     $schema: "https://vega.github.io/schema/vega-lite/v6.json",
     description: "Multi-series line chart with labels and interactive highlight on hover.  We also set the selection's initial value to provide a better screenshot",
-  //   "data": {
-  //   "url": "data/stocks.csv",
-  //   "format": {"parse": {"date": "date"}}
-  // },
-    data: {
-      values: rawData.value ? rawData.value : [],
-      // "format": {"parse": {"date": "date"}}
-    },
     width: "container",
     height: "container",
-  //   "layer": [
-  //   {
-  //     "params": [{
-  //       "name": "index",
-  //       "value": [{"x": {"year": 2005, "month": 1, "date": 1}}],
-  //       "select": {
-  //         "type": "point",
-  //         "encodings": ["x"],
-  //         "on": "pointerover",
-  //         "nearest": true
-  //       }
-  //     }],
-  //     "mark": "point",
-  //     "encoding": {
-  //       "x": {"field": "date", "type": "temporal", "axis": null},
-  //       "opacity": {"value": 0}
-  //     }
-  //   },
-  //   {
-  //     "transform": [
-  //       {
-  //         "lookup": "symbol",
-  //         "from": {"param": "index", "key": "symbol"}
-  //       },
-  //       {
-  //         "calculate": "datum.index && datum.index.price > 0 ? (datum.price - datum.index.price)/datum.index.price : 0",
-  //         "as": "indexed_price"
-  //       }
-  //     ],
-  //     "mark": "line",
-  //     "encoding": {
-  //       "x": {"field": "date", "type": "temporal", "axis": null},
-  //       "y": {
-  //         "field": "indexed_price", "type": "quantitative",
-  //         "axis": {"format": "%"}
-  //       },
-  //       "color": {"field": "symbol", "type": "nominal"}
-  //     }
-  //   },
-  //   {
-  //     "transform": [{"filter": {"param": "index"}}],
-  //     "encoding": {
-  //       "x": {"field": "date", "type": "temporal", "axis": null},
-  //       "color": {"value": "firebrick"}
-  //     },
-  //     "layer": [
-  //       {"mark": {"type": "rule", "strokeWidth": 0.5}},
-  //       {
-  //         "mark": {"type": "text", "align": "center", "fontWeight": 100},
-  //         "encoding": {
-  //           "text": {"field": "date", "timeUnit": "yearmonth"},
-  //           "y": {"value": 310}
-  //         }
-  //       }
-  //     ]
-  //   }
-  // ]
-
-  //   layer: [
-  //   {
-  //     params: [{
-  //       name: "index",
-  //       // value: [{x: {year: 2005, month: 1, date: 1}}],
-  //       select: {
-  //         type: "point",
-  //         encodings: ["x"],
-  //         on: "pointerover",
-  //         nearest: true
-  //       }
-  //     }],
-  //     mark: "point",
-  //     encoding: {
-  //       x: {field: "Date", type: "temporal", axis: null},
-  //       opacity: {value: 0}
-  //     }
-  //   },
-  //   {
-  //     transform: [
-  //       {
-  //         lookup: "Name",
-  //         from: {param: "index", key: "Name"}
-  //       },
-  //       {
-  //         calculate: "datum.index && datum.index.Power > 0 ? (datum.Power - datum.index.Power) / datum.index.Power : 0",
-  //         as: "indexed_power"
-  //       }
-  //     ],
-  //     mark: "line",
-  //     encoding: {
-  //       x: {field: "Date", type: "temporal", axis: null},
-  //       y: {
-  //         field: "indexed_power", type: "quantitative",
-  //         axis: {format: "%"}
-  //       },
-  //       color: {field: "Name", type: "nominal"}
-  //     }
-  //   },
-  //   {
-  //     transform: [{filter: {param: "index"}}],
-  //     encoding: {
-  //       x: {field: "Date", type: "temporal", axis: null},
-  //       color: {value: "firebrick"}
-  //     },
-  //     layer: [
-  //       {mark: {type: "rule", strokeWidth: 0.5}},
-  //       {
-  //         mark: {type: "text", align: "center", fontWeight: 100},
-  //         encoding: {
-  //           text: {field: "Date", timeUnit: "day"},
-  //           y: {value: 310}
-  //         }
-  //       }
-  //     ]
-  //   }
-  // ]
     transform: [],
     encoding: {
       x: {
         field: "Date",
         type: "temporal",
         title: "Date",
+        axis: {
+          grid: false,
+        }
       },
       y: {
         field: "Power",
         type: "quantitative",
         title: "Power",
+        axis: {
+          labelExpr: "round(datum.value / 100000) / 10 + ' M'",
+          grid: false,
+        },
         scale: {
-          zero: false,
+          // zero: false,
           nice: false,
-          // type: "log",
+          type: "log",
         },
       },
       color: {
@@ -306,12 +178,6 @@ const spec = computed(() => {
   }
 });
 
-onMounted(() => {
-  embed('#graph', spec.value)
-});
-
-watch(spec, updateGraph);
-
 fetchData();
 
 </script>
@@ -335,14 +201,14 @@ fetchData();
 
 <div class="row">
   <div class="graph-row">
-    <div class="graph-wrapper pe-2">
+    <div>
       <h4>Player Growth</h4>
       <div class="data-table">
         <DataTable :data="prettyGrowth" default-sort="Growth %" :numeric-columns="['Growth %', 'Growth']" key-name="Name" />
       </div>
     </div>
 
-    <div class="graph-wrapper">
+    <div>
       <h4>Alliance Growth</h4>
       <div class="col-auto data-table">
         <DataTable :data="prettyAllianceGrowth" default-sort="Growth %" :numeric-columns="['Growth %', 'Growth']" key-name="Alliance" />
@@ -351,20 +217,16 @@ fetchData();
   </div>
 </div>
 
-<div class="row">
+<div class="row pt-4">
   <div class="col">
-    <div v-show="data" ref="graphDiv" id="graph"></div>
+    <h4>Player Growth Over Time</h4>
+    <VegaChart :data="growthChartData" :spec="spec" height="1000px" />
   </div>
 </div>
 
 </template>
 
 <style scoped>
-
-#graph {
-  width: 100%;
-  height: 1800px;
-}
 
 .graph-row {
   display: flex;
@@ -375,6 +237,7 @@ fetchData();
 .data-table {
   max-height: 500px;
   overflow: scroll;
+  border-radius: 5px;
 }
 
 .header {
