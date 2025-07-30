@@ -5,13 +5,11 @@ export const useAuthStore = defineStore('auth', () => {
   const secret = ref(localStorage.getItem('secret'));
   const authenticated = computed(() => {
     let correctSecret = import.meta.env.VITE_SECRET_WORD;
-    return secret.value.toLowerCase() == correctSecret.toLowerCase();
+    return secret.value?.toLowerCase() == correctSecret.toLowerCase();
   });
 
   function authenticate(value) {
-    value = value ?? '';
-
-    if (value.toLowerCase() == import.meta.env.VITE_SECRET_WORD.toLowerCase()) {
+    if (value?.toLowerCase() == import.meta.env.VITE_SECRET_WORD.toLowerCase()) {
       localStorage.setItem('secret', value);
       secret.value = value;
 
