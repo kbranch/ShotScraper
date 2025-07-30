@@ -31,6 +31,7 @@ watch(secret, () => auth.authenticate(secret.value));
 
 input {
   width: 500px;
+  max-width: 100%;
 }
 
 </style>

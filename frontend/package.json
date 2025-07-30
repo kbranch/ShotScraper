@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "bootstrap": "^5.3.7",
+    "luxon": "^3.7.1",
     "node": "^20.19.4",
     "pinia": "^3.0.3",
     "vega-embed": "^7.0.2",

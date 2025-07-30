@@ -4,7 +4,9 @@ import VegaChart from '@/components/VegaChart.vue';
 import { computed, ref, watch } from 'vue'
 import { absoluteGrowth } from '@/vegaSpecs/absoluteGrowth';
 import { stdDev, sum } from '@/main';
+import { DateTime } from 'luxon';
 
+const dateFormat = 'yyyy-MM-dd';
 const loading = ref(false);
 const kingdom = ref('79');
 const errorMessage = ref(null);
@@ -12,6 +14,8 @@ const growthData = ref([]);
 const growthChartData = ref([]);
 const allianceGrowthData = ref([]);
 const selectedPlayers = ref([]);
+const startDate = ref(null);
+const endDate = ref(null);
 
 const prettyAllianceGrowth = computed(() => {
   return allianceGrowthData.value.map(x => {
@@ -69,7 +73,11 @@ async function fetchApiUrl(url, parameters) {
 async function fetchData() {
     loading.value = true;
 
-    let params = { kingdom: kingdom.value };
+    let params = {
+      kingdom: kingdom.value,
+      startDate: startDate.value,
+      endDate: endDate.value,
+    };
 
     fetchApiUrl('/rankings', params)
       .then(resp => growthChartData.value = resp);
@@ -87,11 +95,23 @@ function nameKey(obj) {
   return `${obj.Name} (${obj.PlayerId})`;
 }
 
+function dateLastDays(days) {
+  let now = DateTime.now();
+  startDate.value = now.plus({ days: -days }).toFormat(dateFormat);
+  endDate.value = now.toFormat(dateFormat);
+}
+
+
 watch(growthData, (data) => {
   selectedPlayers.value = data
     .filter(x => x.GrowthPercent > averageGrowthPercent.value + stdDevGrowthPercent.value)
     .map(nameKey);
 });
+
+watch(startDate, fetchData);
+watch(endDate, fetchData);
+
+dateLastDays(14);
 
 fetchData();
 
@@ -102,6 +122,29 @@ fetchData();
 <div class="header">
   <img class="header-image" src="/shitshot.png" />
   <h1>ShotHole</h1>
+</div>
+
+<div class="row">
+  <div class="col date-row">
+    <div>
+      <div>
+        <a class="btn btn-secondary mb-2" @click="dateLastDays(14)">Last 2 Weeks</a>
+      </div>
+      <div>
+        <a class="btn btn-secondary" @click="dateLastDays(28)">Last 4 Weeks</a>
+      </div>
+    </div>
+
+    <div class="date-picker">
+      <label for="startDate">Start Date</label>
+      <input v-model="startDate" id="startDate" class="form-control" type="date" />
+    </div>
+
+    <div class="date-picker">
+      <label for="endDate">End Date</label>
+      <input v-model="endDate" id="endDate" class="form-control" type="date" />
+    </div>
+  </div>
 </div>
 
 <div class="row">
@@ -168,6 +211,18 @@ h1 {
   display: flex;
   justify-content: center;
   padding-top: 8px;
+}
+
+.date-row {
+  display: flex;
+  justify-content: center;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+.date-picker {
+  padding-left: 8px;
+  padding-right: 8px;
 }
 
 </style>
