@@ -5,7 +5,7 @@ export const useAuthStore = defineStore('auth', () => {
   const secret = ref(localStorage.getItem('secret'));
   const authenticated = computed(() => {
     let correctSecret = import.meta.env.VITE_SECRET_WORD;
-    return secret.value == correctSecret;
+    return secret.value.toLowerCase() == correctSecret.toLowerCase();
   });
 
   function authenticate(value) {
