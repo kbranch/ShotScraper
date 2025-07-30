@@ -7,7 +7,7 @@ select Rankings.PlayerId
 	  ,Rankings.Power
 	  ,Rankings.Rank
 	  ,Rankings.Alliance
-	  ,cast(datediff(second,{d '1970-01-01'}, Samples.Date) as bigint) * 1000 as Date
+	  ,cast(datediff(second,{d '1970-01-01'}, dateadd(hour, 10, Samples.Date)) as bigint) * 1000 as Date
 from Rankings
 join Samples
   on Samples.SampleId = Rankings.SampleId
