@@ -1,6 +1,8 @@
 getRankings = """
 declare @kingdom nvarchar(20) = ?
 declare @type varchar(20) = ?
+declare @startDate datetime2 = dateadd(hour, 5, ?) -- Jank because UTC
+declare @endDate datetime2 = dateadd(hour, 5, ?)
 
 select Rankings.PlayerId
       ,Rankings.Name
@@ -13,6 +15,7 @@ join Samples
   on Samples.SampleId = Rankings.SampleId
 where Samples.Kingdom = @kingdom
       and Samples.Type = @type
+	  and Samples.Date between dateadd(hour, -10, @startDate) and dateadd(hour, 10, @endDate)
 group by Rankings.PlayerId
 		,Rankings.Name
 		,Rankings.Power
@@ -24,15 +27,18 @@ group by Rankings.PlayerId
 getAllianceRankings = """
 declare @kingdom nvarchar(20) = ?
 declare @type varchar(20) = ?
+declare @startDate datetime2 = dateadd(hour, 5, ?) -- Jank because UTC
+declare @endDate datetime2 = dateadd(hour, 5, ?)
 
 select Rankings.Alliance
       ,sum(Rankings.Power) as Power
-	  ,datediff(second,{d '1970-01-01'}, Samples.Date) as Date
+	  ,datediff(second,{d '1970-01-01'}, dateadd(hour, 10, Samples.Date)) as Date
 from Rankings
 join Samples
   on Samples.SampleId = Rankings.SampleId
 where Samples.Kingdom = @kingdom
       and Samples.Type = @type
+	  and Samples.Date between dateadd(hour, -10, @startDate) and dateadd(hour, 10, @endDate)
 group by Rankings.Alliance
 		,Samples.Date
 """
@@ -40,6 +46,8 @@ group by Rankings.Alliance
 getRankingGrowth = """
 declare @kingdom nvarchar(20) = ?
 declare @type varchar(20) = ?
+declare @startDate datetime2 = dateadd(hour, 5, ?) -- Jank because UTC
+declare @endDate datetime2 = dateadd(hour, 5, ?)
 
 select LastRankings.PlayerId
       ,LastRankings.Name
@@ -57,6 +65,7 @@ outer apply (
 	from Samples
 	where Samples.Kingdom = @kingdom
 	      and Samples.Type = @type
+		  and Samples.Date between dateadd(hour, -10, @startDate) and dateadd(hour, 10, @endDate)
 ) as targetSamples
 outer apply (
 	select *
@@ -72,6 +81,8 @@ where LastRankings.SampleId = targetSamples.Last
 getAllianceRankingGrowth = """
 declare @kingdom nvarchar(20) = ?
 declare @type varchar(20) = ?
+declare @startDate datetime2 = dateadd(hour, 5, ?) -- Jank because UTC
+declare @endDate datetime2 = dateadd(hour, 5, ?)
 
 ;with Alliances as (
 	select Rankings.Alliance
@@ -82,6 +93,7 @@ declare @type varchar(20) = ?
 		from Samples
 		where Samples.Kingdom = @kingdom
 			  and Samples.Type = @type
+			  and Samples.Date between dateadd(hour, -10, @startDate) and dateadd(hour, 10, @endDate)
 	) as targetSamples
 	where Rankings.SampleId = targetSamples.Last
 	group by Rankings.Alliance
@@ -100,6 +112,7 @@ outer apply (
 	from Samples
 	where Samples.Kingdom = @kingdom
 	      and Samples.Type = @type
+		  and Samples.Date between dateadd(hour, -10, @startDate) and dateadd(hour, 10, @endDate)
 ) as targetSamples
 outer apply (
 	select sum(Rankings.Power) as Power

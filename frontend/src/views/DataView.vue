@@ -1,21 +1,24 @@
 <script setup>
 import DataTable from '@/components/DataTable.vue';
 import VegaChart from '@/components/VegaChart.vue';
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { absoluteGrowth } from '@/vegaSpecs/absoluteGrowth';
+import { stdDev, sum } from '@/main';
 
-const growthChartData = ref([]);
 const loading = ref(false);
-const errorMessage = ref(null);
 const kingdom = ref('79');
+const errorMessage = ref(null);
 const growthData = ref([]);
+const growthChartData = ref([]);
 const allianceGrowthData = ref([]);
+const selectedPlayers = ref([]);
 
 const prettyAllianceGrowth = computed(() => {
   return allianceGrowthData.value.map(x => {
     return {
       Alliance: x.Alliance,
       Players: x.PlayerCount,
+      Power: `${Math.round(x.LastPower / 10000)/100} M`,
       Growth: `${Math.round(x.Growth / 10000)/100} M`,
       'Growth %': `${Math.round(x.GrowthPercent * 1000) / 10}%`,
     }
@@ -26,7 +29,8 @@ const prettyGrowth = computed(() => {
   return growthData.value.map(x => {
     return {
       Alliance: x.Alliance,
-      Player: `${x.Name} (${x.PlayerId})`,
+      Player: nameKey(x),
+      Power: `${Math.round(x.Power / 10000)/100} M`,
       Growth: `${Math.round(x.Growth / 10000)/100} M`,
       'Growth %': `${Math.round(x.GrowthPercent * 1000) / 10}%`,
     }
@@ -34,9 +38,11 @@ const prettyGrowth = computed(() => {
 });
 
 const prettyGrowthChartData = computed(() => {
-  return growthChartData.value.map(x => {
+  return growthChartData.value
+    .filter(x => selectedPlayers.value.includes(nameKey(x)))
+    .map(x => {
     return {
-      Date: new Date(x.Date).setHours(0, 0, 0, 0),
+      Date: new Date(x.Date).setHours(0, 0, 0),
       Power: x.Power,
       PlayerId: x.PlayerId,
       Name: x.Name,
@@ -45,6 +51,9 @@ const prettyGrowthChartData = computed(() => {
     }
   });
 });
+
+const averageGrowthPercent = computed(() => sum(growthData.value, 'GrowthPercent') / growthData.value.length);
+const stdDevGrowthPercent = computed(() => stdDev(growthData.value.map(x => x.GrowthPercent)));
 
 async function fetchApiUrl(url, parameters) {
     let response = await fetch(`${import.meta.env.VITE_API_URL}${url}?${new URLSearchParams(parameters).toString()}`);
@@ -61,15 +70,28 @@ async function fetchData() {
     loading.value = true;
 
     let params = { kingdom: kingdom.value };
-    let rankings = await fetchApiUrl('/rankings', params);
 
-    growthChartData.value = rankings;
+    fetchApiUrl('/rankings', params)
+      .then(resp => growthChartData.value = resp);
 
-    growthData.value = await fetchApiUrl('/growth', params);
-    allianceGrowthData.value = await fetchApiUrl('/allianceGrowth', params);
+    fetchApiUrl('/growth', params)
+      .then(resp => growthData.value = resp);
+      
+    fetchApiUrl('/allianceGrowth', params)
+      .then(resp => allianceGrowthData.value = resp);
 
     loading.value = false;
 }
+
+function nameKey(obj) {
+  return `${obj.Name} (${obj.PlayerId})`;
+}
+
+watch(growthData, (data) => {
+  selectedPlayers.value = data
+    .filter(x => x.GrowthPercent > averageGrowthPercent.value + stdDevGrowthPercent.value)
+    .map(nameKey);
+});
 
 fetchData();
 
@@ -78,6 +100,7 @@ fetchData();
 <template>
 
 <div class="header">
+  <img class="header-image" src="/shitshot.png" />
   <h1>ShotHole</h1>
 </div>
 
@@ -95,16 +118,16 @@ fetchData();
 <div class="row">
   <div class="graph-row">
     <div class="pt-2">
-      <h4>Player Growth</h4>
+      <h4>Player Growth ({{ Math.round(averageGrowthPercent * 1000) / 10 }}% Avg {{ Math.round(stdDevGrowthPercent * 1000) / 10 }}% Std Dev)</h4>
       <div class="data-table">
-        <DataTable :data="prettyGrowth" default-sort="Growth %" :numeric-columns="['Growth %', 'Growth']" key-name="Name" />
+        <DataTable v-model="selectedPlayers" :data="prettyGrowth" default-sort="Growth %" :numeric-columns="['Growth %', 'Growth', 'Power']" key-name="Player" />
       </div>
     </div>
 
     <div class="pt-2">
       <h4>Alliance Growth</h4>
       <div class="col-auto data-table">
-        <DataTable :data="prettyAllianceGrowth" default-sort="Growth %" :numeric-columns="['Growth %', 'Growth']" key-name="Alliance" />
+        <DataTable :data="prettyAllianceGrowth" default-sort="Growth %" :numeric-columns="['Growth %', 'Growth', 'Power']" key-name="Alliance" />
       </div>
     </div>
   </div>
@@ -121,6 +144,14 @@ fetchData();
 
 <style scoped>
 
+h1 {
+  margin-bottom: 0px;
+}
+
+.header-image {
+  height: 48px;
+}
+
 .graph-row {
   display: flex;
   justify-content: space-around;
@@ -136,6 +167,7 @@ fetchData();
 .header {
   display: flex;
   justify-content: center;
+  padding-top: 8px;
 }
 
 </style>

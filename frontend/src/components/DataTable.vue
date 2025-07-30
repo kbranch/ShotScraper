@@ -3,10 +3,13 @@
 import { computed, ref } from 'vue';
 import { sortByKey } from '@/main';
 
+const model = defineModel();
 const props = defineProps(['data', 'numericColumns', 'defaultSort', 'keyName']);
 
 const sortCol = ref(props.defaultSort);
 const sortAsc = ref(false);
+
+const cursor = computed(() => model.value ? 'pointer' : 'default');
 
 const cols = computed(() => {
   if ((props.data?.length ?? 0) == 0) {
@@ -43,6 +46,18 @@ function sortColumn(col) {
   }
 }
 
+function toggleSelected(row) {
+  if (!model.value) { return; }
+
+  let key = row[props.keyName];
+  if (model.value.includes(key)) {
+    model.value.splice(model.value.indexOf(key), 1);
+  }
+  else {
+    model.value.push(key);
+  }
+}
+
 </script>
 
 <template>
@@ -58,8 +73,8 @@ function sortColumn(col) {
   </thead>
 
   <tbody>
-    <tr v-for="row in sortedData" :key="row[keyName]">
-      <td v-for="col in cols" :key="row[col]">{{ row[col] }}</td>
+    <tr v-for="row in sortedData" :key="row[keyName]" @click="toggleSelected(row)">
+      <td v-for="col in cols" :key="row[col]" :class="{ selected: model?.includes(row[keyName]) }">{{ row[col] }}</td>
     </tr>
   </tbody>
 </table>
@@ -67,6 +82,10 @@ function sortColumn(col) {
 </template>
 
 <style scoped>
+
+.selected {
+  background-color: rgba(180, 180, 255, 0.125);
+}
 
 table {
   width: 100%;
@@ -94,6 +113,7 @@ th {
 
 tr {
   border-radius: 5px;
+  cursor: v-bind(cursor);
 }
 
 .sort-pad {

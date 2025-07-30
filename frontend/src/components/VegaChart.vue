@@ -43,7 +43,7 @@ function updateGraph(newSpec) {
     width: graphDiv.value.clientWidth,
     height: graphDiv.value.clientHeight,
     config: {
-      background: "#212529",
+      background: "#222222",
       axis: {
         labelColor: "white",
         titleColor: "white",

@@ -28,14 +28,14 @@ def executeQuery(query, parameters):
 
     return [{columns[i]: row[i] for i in range(len(columns))} for row in result]
 
-def getRankings(kingdom, type):
-    return executeQuery(queries.getRankings, (kingdom, type))
+def getRankings(kingdom, type, startDate, endDate):
+    return executeQuery(queries.getRankings, (kingdom, type, startDate, endDate))
 
-def getAllianceRankings(kingdom, type):
-    return executeQuery(queries.getAllianceRankings, (kingdom, type))
+def getAllianceRankings(kingdom, type, startDate, endDate):
+    return executeQuery(queries.getAllianceRankings, (kingdom, type, startDate, endDate))
 
-def getGrowth(kingdom, type):
-    return executeQuery(queries.getRankingGrowth, (kingdom, type))
+def getGrowth(kingdom, type, startDate, endDate):
+    return executeQuery(queries.getRankingGrowth, (kingdom, type, startDate, endDate))
 
-def getAllianceGrowth(kingdom, type):
-    return executeQuery(queries.getAllianceRankingGrowth, (kingdom, type))
+def getAllianceGrowth(kingdom, type, startDate, endDate):
+    return executeQuery(queries.getAllianceRankingGrowth, (kingdom, type, startDate, endDate))

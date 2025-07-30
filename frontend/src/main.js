@@ -41,3 +41,18 @@ export function sortByKey(arr, key, sortAsc = true) {
   let result = arr.sort((a, b) => Array.isArray(key(a)) ? compareArrays(key(a), key(b)) : compare(key(a), key(b)));
   return sortAsc ? result : result.reverse();
 }
+
+export function sum(items, prop) {
+  return items?.reduce((a, b) => {
+      return a + b[prop];
+  }, 0);
+}
+
+export function stdDev(array) {
+  if (array.length == 0) { return 0; }
+
+  const n = array.length;
+  const mean = array.reduce((a, b) => a + b) / n;
+
+  return Math.sqrt(array.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / n);
+}
