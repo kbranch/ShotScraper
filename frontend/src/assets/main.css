@@ -15,6 +15,7 @@
   --bs-nav-link-color: var(--color-text);
   --bs-nav-link-hover-color: var(--color-text);
   --bs-table-bg: var(--color-background-soft);
+  --bs-secondary-color: var(--color-text);
 }
 
 .accordion-button::after {
