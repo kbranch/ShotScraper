@@ -13,7 +13,7 @@ watch(secret, () => auth.authenticate(secret.value));
 <template>
 
 <div id="authbox">
-  <div>
+  <div id="inputWrapper">
     <input v-model="secret" type="text" class="form-control" placeholder="Secret phrase?">
   </div>
 </div>
@@ -27,11 +27,16 @@ watch(secret, () => auth.authenticate(secret.value));
   align-items: center;
   justify-content: center;
   padding-top: 32px;
+  max-width: 100%;
 }
 
 input {
-  width: 500px;
-  max-width: 100%;
+  width: 100%;
+}
+
+#inputWrapper {
+  width: 100%;
+  max-width: 500px;
 }
 
 </style>

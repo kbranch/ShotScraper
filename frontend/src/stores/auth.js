@@ -8,6 +8,7 @@ export const useAuthStore = defineStore('auth', () => {
     return secret.value?.toLowerCase().trim() == correctSecret.toLowerCase().trim();
   });
 
+  // None of this is secure at all, but that's fine
   function authenticate(value) {
     if (value?.toLowerCase().trim() == import.meta.env.VITE_SECRET_WORD.toLowerCase().trim()) {
       localStorage.setItem('secret', value);
