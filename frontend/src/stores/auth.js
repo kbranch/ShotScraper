@@ -9,7 +9,7 @@ export const useAuthStore = defineStore('auth', () => {
   });
 
   function authenticate(value) {
-    if (value.toLowerCase() == import.meta.env.VITE_SECRET_WORD.toLowerCase()) {
+    if (value?.toLowerCase() == import.meta.env.VITE_SECRET_WORD.toLowerCase()) {
       localStorage.setItem('secret', value);
       secret.value = value;
 
