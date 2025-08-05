@@ -17,6 +17,10 @@ const selectedPlayers = ref([]);
 const startDate = ref(null);
 const endDate = ref(null);
 
+const selectedIds = computed(() => selectedPlayers.value.map(idFromName));
+const averageGrowthPercent = computed(() => sum(growthData.value, 'GrowthPercent') / growthData.value.length);
+const stdDevGrowthPercent = computed(() => stdDev(growthData.value.map(x => x.GrowthPercent)));
+
 const prettyAllianceGrowth = computed(() => {
   return allianceGrowthData.value.map(x => {
     return {
@@ -43,7 +47,7 @@ const prettyGrowth = computed(() => {
 
 const prettyGrowthChartData = computed(() => {
   return growthChartData.value
-    .filter(x => selectedPlayers.value.includes(nameKey(x)))
+    .filter(x => selectedIds.value.includes(x.PlayerId))
     .map(x => {
     return {
       Date: new Date(x.Date).setHours(0, 0, 0),
@@ -55,9 +59,6 @@ const prettyGrowthChartData = computed(() => {
     }
   });
 });
-
-const averageGrowthPercent = computed(() => sum(growthData.value, 'GrowthPercent') / growthData.value.length);
-const stdDevGrowthPercent = computed(() => stdDev(growthData.value.map(x => x.GrowthPercent)));
 
 async function fetchApiUrl(url, parameters) {
     let response = await fetch(`${import.meta.env.VITE_API_URL}${url}?${new URLSearchParams(parameters).toString()}`);
@@ -93,6 +94,10 @@ async function fetchData() {
 
 function nameKey(obj) {
   return `${obj.Name} (${obj.PlayerId})`;
+}
+
+function idFromName(name) {
+  return /\((\d+)\)/.exec(name)[1];
 }
 
 function dateLastDays(days) {
